@@ -1,0 +1,28 @@
+---
+  - name: Playbook to Bootstrap Managed Clients to Satellite 6
+    hosts: "{{ which_host }}"
+    tasks:
+      - name: Add the host to autosign.conf
+        lineinfile:
+          dest: '/etc/puppet/autosign.conf'
+          line: '{{ ansible_fqdn }}'
+        delegate_to: satellite
+      - name: Remove puppet cert if exists
+        file: path=/var/lib/puppet/ssl state=absent
+      - name: Download Bootstrap
+        get_url:
+          url: "http://{{ satellite_fqdn }}/pub/bootstrap.py"
+          dest: /var/tmp/bootstrap.py
+          mode: 0777
+      - name: Bootstrap the client to Sat 6
+        command: "/var/tmp/bootstrap.py -l stadmin -p '{{ admin_pass }}' -s {{ satellite_fqdn }} -o {{ organization }} -L {{ location }} -g '{{ host_group }}' -a '{{ activation_key }}' --force > /var/tmp/bootstrap.log"
+        when: puppet
+      - name: Bootstrap the client to Sat 6 - No Puppet
+        command: "/var/tmp/bootstrap.py -l stadmin -p '{{ admin_pass }}' -s {{ satellite_fqdn }} -o {{ organization }} -L {{ location }} -g '{{ host_group }}' -a '{{ activation_key }}' --skip-puppet --force > /var/tmp/bootstrap.log"
+        when: puppet == 'false'
+      - name: Remove the host from autosign.conf
+        lineinfile:
+          dest: '/etc/puppet/autosign.conf' 
+          line: '{{ ansible_fqdn }}'
+          state: absent
+        delegate_to: satellite

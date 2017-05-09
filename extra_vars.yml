@@ -1,0 +1,8 @@
+which_host: client1
+satellite_fqdn: satellite-server.somwhere.local
+admin_pass: password
+organization: ABC
+location: anywhere
+hostgroup: hg-rhel7
+activation_key: ak-rhel7
+puppet: true
